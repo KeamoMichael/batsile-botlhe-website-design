@@ -19,37 +19,46 @@ const initScrollAnimations = () => {
 
     // Observe elements for animations
     const fadeElements = document.querySelectorAll('.section-header, .service-card, .fade-in-up, .client-logo, h1.fade-in-up, h2.fade-in-up, p.fade-in-up');
-    
+
     // Function to check if element is in viewport
     const isElementInViewport = (el) => {
         const rect = el.getBoundingClientRect();
         const windowHeight = window.innerHeight || document.documentElement.clientHeight;
         const windowWidth = window.innerWidth || document.documentElement.clientWidth;
-        
+
         return (
             rect.top >= 0 &&
             rect.left >= 0 &&
             rect.bottom <= windowHeight &&
             rect.right <= windowWidth
         ) || (
-            rect.top < windowHeight &&
-            rect.bottom > 0 &&
-            rect.left < windowWidth &&
-            rect.right > 0
-        );
+                rect.top < windowHeight &&
+                rect.bottom > 0 &&
+                rect.left < windowWidth &&
+                rect.right > 0
+            );
     };
-    
-    fadeElements.forEach(el => {
+
+    fadeElements.forEach((el, index) => {
         observer.observe(el);
-        
+
         // Check if element is already in viewport on page load/refresh
         // Use requestAnimationFrame to ensure DOM is fully rendered
         requestAnimationFrame(() => {
             if (isElementInViewport(el)) {
-                // Small delay to ensure smooth animation on load
+                // Calculate delay based on element type for staggered effect
+                let delay = 400; // Base delay for animation to be visible
+
+                // Add staggered delay for service cards
+                if (el.classList.contains('service-card')) {
+                    const cards = document.querySelectorAll('.service-card');
+                    const cardIndex = Array.from(cards).indexOf(el);
+                    delay = 400 + (cardIndex * 100); // Stagger each card by 100ms
+                }
+
                 setTimeout(() => {
                     el.classList.add('visible');
-                }, 200);
+                }, delay);
             }
         });
     });
@@ -65,7 +74,7 @@ const initHeaderScroll = () => {
     const logoLight = document.getElementById('logo-light');
     const featuresSection = document.querySelector('.features-section');
     const heroSection = document.getElementById('hero');
-    
+
     if (!navbar || !logoDark || !logoLight || !featuresSection) return;
 
     // Initialize: ensure clean state on page load
@@ -81,7 +90,7 @@ const initHeaderScroll = () => {
         if (isWhiteNavbarVisible || isTransitioning) return; // Prevent duplicate calls
         isWhiteNavbarVisible = true;
         isTransitioning = true;
-        
+
         // First apply white background (instant, no transition)
         navbar.classList.add('navbar-page');
         // Position it above viewport
@@ -105,7 +114,7 @@ const initHeaderScroll = () => {
         if (!isWhiteNavbarVisible || isTransitioning) return; // Prevent duplicate calls
         isWhiteNavbarVisible = false;
         isTransitioning = true;
-        
+
         // Slide white navbar up
         navbar.classList.add('navbar-hidden');
         // After slide up animation completes, remove white background
@@ -121,7 +130,7 @@ const initHeaderScroll = () => {
 
     const checkScroll = () => {
         const featuresRect = featuresSection.getBoundingClientRect();
-        
+
         // Check if features section (second section) touches the top edge of the screen
         // Trigger when features section top reaches 0 (touches top edge)
         if (featuresRect.top <= 0) {
@@ -143,7 +152,7 @@ const initHeaderScroll = () => {
             ticking = true;
         }
     }, { passive: true });
-    
+
     // Check on page load - ensure navbar is visible (transparent) initially
     // Use setTimeout to ensure DOM is fully ready
     setTimeout(() => {
@@ -181,23 +190,23 @@ const initSmoothScroll = () => {
 const initLoadMore = () => {
     const loadMoreBtn = document.getElementById('loadMoreBtn');
     const servicesGrid = document.querySelector('.services-grid');
-    
+
     if (!loadMoreBtn || !servicesGrid) return;
 
     // Additional services data (can be expanded)
     const additionalServices = [
-        { 
-            title: 'Electrical Maintenance', 
+        {
+            title: 'Electrical Maintenance',
             image: 'Web Resources/Service Images/pexels-ywanphoto-3089685.jpg',
             link: './service/electrical-maintenance'
         },
-        { 
-            title: 'Fault Finding', 
+        {
+            title: 'Fault Finding',
             image: 'Web Resources/Service Images/Fault-find-768x512.jpg',
             link: './service/fault-finding'
         },
-        { 
-            title: 'Gardening & Cleaning', 
+        {
+            title: 'Gardening & Cleaning',
             image: 'Web Resources/Service Images/municipal-professional-house-landscape-lawn-gardening-mowing-maintenace-and-service-city-grass-yard.jpg',
             link: './service/gardening-cleaning'
         }
@@ -213,7 +222,7 @@ const initLoadMore = () => {
 
         loadMoreBtn.style.opacity = '0.7';
         loadMoreBtn.style.pointerEvents = 'none';
-        
+
         setTimeout(() => {
             const serviceToLoad = additionalServices[servicesLoaded - 3];
             if (serviceToLoad) {
@@ -253,22 +262,22 @@ const initLoadMore = () => {
 
 const initButtonEffects = () => {
     const buttons = document.querySelectorAll('.btn, .btn-load-more, .nav-cta');
-    
+
     buttons.forEach(button => {
-        button.addEventListener('click', function(e) {
+        button.addEventListener('click', function (e) {
             const ripple = document.createElement('span');
             const rect = this.getBoundingClientRect();
             const size = Math.max(rect.width, rect.height);
             const x = e.clientX - rect.left - size / 2;
             const y = e.clientY - rect.top - size / 2;
-            
+
             ripple.style.width = ripple.style.height = size + 'px';
             ripple.style.left = x + 'px';
             ripple.style.top = y + 'px';
             ripple.classList.add('ripple');
-            
+
             this.appendChild(ripple);
-            
+
             setTimeout(() => {
                 ripple.remove();
             }, 600);
@@ -303,63 +312,150 @@ const initMobileMenu = () => {
     const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
     const mobileMenuClose = document.getElementById('mobileMenuClose');
     const mobileNavLinks = mobileMenuOverlay ? mobileMenuOverlay.querySelectorAll('.mobile-nav-link') : [];
-    
+
     if (!mobileMenuToggle || !mobileMenuOverlay) return;
-    
+
     const navbar = document.getElementById('navbar');
-    
+
     const openMenu = () => {
         mobileMenuOverlay.classList.add('active');
         mobileMenuToggle.classList.add('active');
-        mobileMenuToggle.style.display = 'none';
         document.body.style.overflow = 'hidden';
-        
-        // Hide navbar border when menu is open
+
         if (navbar) {
             navbar.classList.add('menu-open');
         }
-        
-        // Reset animation delays for menu items
+
+        // Stagger items in after panel has settled
         const menuItems = mobileMenuOverlay.querySelectorAll('.mobile-menu-list li');
         menuItems.forEach((item, index) => {
-            item.style.transitionDelay = `${(index + 1) * 0.1}s`;
+            item.style.transitionDelay = `${0.3 + (index * 0.07)}s`;
         });
     };
-    
+
     const closeMenu = () => {
         mobileMenuOverlay.classList.remove('active');
         mobileMenuToggle.classList.remove('active');
-        mobileMenuToggle.style.display = 'flex';
-        document.body.style.overflow = '';
-        
-        // Show navbar border when menu is closed
+
         if (navbar) {
             navbar.classList.remove('menu-open');
         }
-        
-        // Reset animation delays
+
+        // Reset item delays so they're ready for next open
         const menuItems = mobileMenuOverlay.querySelectorAll('.mobile-menu-list li');
         menuItems.forEach(item => {
             item.style.transitionDelay = '0s';
         });
+
+        // Restore scroll after panel has slid out
+        setTimeout(() => {
+            document.body.style.overflow = '';
+        }, 350);
     };
-    
-    mobileMenuToggle.addEventListener('click', openMenu);
-    
+
+    // Single button toggles open and close
+    mobileMenuToggle.addEventListener('click', () => {
+        if (mobileMenuOverlay.classList.contains('active')) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
+    });
+
     if (mobileMenuClose) {
         mobileMenuClose.addEventListener('click', closeMenu);
     }
-    
+
     // Close menu when clicking on a link
     mobileNavLinks.forEach(link => {
         link.addEventListener('click', closeMenu);
     });
-    
+
     // Close menu on window resize if it's open and we're no longer on mobile
     window.addEventListener('resize', () => {
         if (window.innerWidth > 767) {
             closeMenu();
         }
+    });
+};
+
+// ============================================
+// Web3Forms Integration
+// ============================================
+
+const initWeb3Forms = () => {
+    // Handle both service quote form and contact form
+    const forms = [
+        {
+            form: document.getElementById('serviceQuoteForm'),
+            submitBtn: document.getElementById('formSubmitBtn'),
+            successMessage: document.getElementById('formSuccessMessage')
+        },
+        {
+            form: document.getElementById('contactForm'),
+            submitBtn: document.getElementById('contactFormSubmitBtn'),
+            successMessage: document.getElementById('contactFormSuccessMessage')
+        }
+    ];
+
+    forms.forEach(({ form, submitBtn, successMessage }) => {
+        if (!form) return; // Exit if form doesn't exist on this page
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Disable submit button and show loading state
+            const originalBtnText = submitBtn.querySelector('.btn-text-inner').textContent;
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.7';
+            submitBtn.querySelector('.btn-text-inner').textContent = 'Sending...';
+
+            // Prepare form data
+            const formData = new FormData(form);
+            const object = Object.fromEntries(formData);
+            const json = JSON.stringify(object);
+
+            try {
+                const response = await fetch('https://api.web3forms.com/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: json
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Show success message
+                    form.style.display = 'none';
+                    successMessage.style.display = 'block';
+
+                    // Scroll to success message
+                    successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                    // Reset form
+                    form.reset();
+
+                    // Optional: Hide success message and show form again after 8 seconds
+                    setTimeout(() => {
+                        successMessage.style.display = 'none';
+                        form.style.display = 'block';
+                    }, 8000);
+                } else {
+                    throw new Error(result.message || 'Form submission failed');
+                }
+            } catch (error) {
+                console.error('Form submission error:', error);
+                alert('There was an error submitting your form. Please try again or contact us directly.');
+            } finally {
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.querySelector('.btn-text-inner').textContent = originalBtnText;
+            }
+        });
     });
 };
 
@@ -375,6 +471,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initButtonEffects();
     initActiveNav();
     initMobileMenu();
+    initWeb3Forms();
+    initAccordion();
 });
 
 // ============================================
@@ -431,3 +529,51 @@ const addRippleStyles = () => {
 };
 
 addRippleStyles();
+
+// ============================================
+// Accordion Functionality
+// ============================================
+
+const initAccordion = () => {
+    const accordionItems = document.querySelectorAll('.accordion-item');
+
+    // Set initial height for active items
+    accordionItems.forEach(item => {
+        if (item.classList.contains('active')) {
+            const content = item.querySelector('.accordion-content');
+            content.style.height = content.scrollHeight + 'px';
+            content.style.opacity = '1';
+        }
+    });
+
+    accordionItems.forEach(item => {
+        const header = item.querySelector('.accordion-header');
+
+        header.addEventListener('click', () => {
+            const isActive = item.classList.contains('active');
+
+            // Close all other items (optional - remove if multiple should be open)
+            // accordionItems.forEach(otherItem => {
+            //     if (otherItem !== item && otherItem.classList.contains('active')) {
+            //         otherItem.classList.remove('active');
+            //         const content = otherItem.querySelector('.accordion-content');
+            //         content.style.height = '0';
+            //         content.style.opacity = '0';
+            //     }
+            // });
+
+            // Toggle current item
+            if (isActive) {
+                item.classList.remove('active');
+                const content = item.querySelector('.accordion-content');
+                content.style.height = '0';
+                content.style.opacity = '0';
+            } else {
+                item.classList.add('active');
+                const content = item.querySelector('.accordion-content');
+                content.style.height = content.scrollHeight + 'px';
+                content.style.opacity = '1';
+            }
+        });
+    });
+};
